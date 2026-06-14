@@ -1,0 +1,35 @@
+body {
+    background-color: #f5f7fa;
+}
+
+.main-title {
+    color: #0D47A1;
+    text-align: center;
+    font-size: 42px;
+    font-weight: bold;
+}
+
+.subtitle {
+    color: #1565C0;
+    text-align: center;
+    margin-top: -10px;
+}
+
+h1, h2, h3 {
+    color: #0D47A1;
+}
+
+.stButton>button {
+    background-color: #1565C0;
+    color: white;
+    border-radius: 10px;
+    height: 3em;
+    width: 100%;
+}
+
+.stFileUploader {
+    border: 3px dashed #1565C0;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: white;
+}
