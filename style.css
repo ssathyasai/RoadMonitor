@@ -1,35 +1,421 @@
-body {
-    background-color: #f5f7fa;
+/* =========================================
+GOOGLE FONT
+========================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* =========================================
+FULL APP BACKGROUND
+========================================= */
+
+.stApp{
+
+    font-family:'Poppins', sans-serif;
+
+    background:
+    radial-gradient(circle at top left, rgba(192,132,252,.45), transparent 25%),
+    radial-gradient(circle at bottom right, rgba(96,165,250,.35), transparent 25%),
+    linear-gradient(
+    135deg,
+    #eef2ff,
+    #dbeafe,
+    #f5f3ff,
+    #ecfeff
+    );
+
+    background-attachment:fixed;
+
+    color:#111827;
 }
 
-.main-title {
-    color: #0D47A1;
-    text-align: center;
-    font-size: 42px;
-    font-weight: bold;
+/* =========================================
+MAIN CONTAINER
+========================================= */
+
+.block-container{
+
+    max-width:95%;
+
+    padding-top:1rem;
+
+    padding-bottom:2rem;
 }
 
-.subtitle {
-    color: #1565C0;
-    text-align: center;
-    margin-top: -10px;
+/* =========================================
+HERO SECTION
+========================================= */
+
+.hero{
+
+    text-align:center;
+
+    padding:50px;
+
+    margin-bottom:30px;
+
+    border-radius:32px;
+
+    background:
+    rgba(255,255,255,.55);
+
+    backdrop-filter:blur(18px);
+
+    border:
+    1px solid rgba(255,255,255,.4);
+
+    box-shadow:
+    0px 10px 40px rgba(96,165,250,.15);
+
+    position:relative;
+
+    overflow:hidden;
 }
 
-h1, h2, h3 {
-    color: #0D47A1;
+/* animated glow */
+
+.hero::before{
+
+    content:"";
+
+    position:absolute;
+
+    top:0;
+
+    left:-50%;
+
+    width:200%;
+
+    height:4px;
+
+    background:
+    linear-gradient(
+    90deg,
+    transparent,
+    #60a5fa,
+    #a78bfa,
+    transparent
+    );
+
+    animation:moveGlow 6s linear infinite;
 }
 
-.stButton>button {
-    background-color: #1565C0;
-    color: white;
-    border-radius: 10px;
-    height: 3em;
-    width: 100%;
+@keyframes moveGlow{
+
+    0%{
+        transform:translateX(-20%);
+    }
+
+    100%{
+        transform:translateX(20%);
+    }
 }
 
-.stFileUploader {
-    border: 3px dashed #1565C0;
-    padding: 20px;
-    border-radius: 10px;
-    background-color: white;
+/* =========================================
+TITLE
+========================================= */
+
+.hero h1{
+
+    font-size:72px;
+
+    font-weight:800;
+
+    line-height:1.2;
+
+    margin-bottom:12px;
+
+    background:
+    linear-gradient(
+    90deg,
+    #2563eb,
+    #7c3aed
+    );
+
+    -webkit-background-clip:text;
+
+    -webkit-text-fill-color:transparent;
+}
+
+/* =========================================
+SUBTITLE
+========================================= */
+
+.hero p{
+
+    font-size:24px;
+
+    color:#475569;
+
+    letter-spacing:.5px;
+}
+
+/* =========================================
+GLASS CARDS
+========================================= */
+
+.glass{
+
+    background:
+    rgba(255,255,255,.55);
+
+    backdrop-filter:blur(18px);
+
+    border:
+    1px solid rgba(255,255,255,.45);
+
+    border-radius:28px;
+
+    padding:30px;
+
+    margin-bottom:24px;
+
+    box-shadow:
+    0px 8px 35px rgba(148,163,184,.15);
+
+    transition:.35s ease;
+}
+
+/* hover effect */
+
+.glass:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:
+    0px 10px 45px rgba(96,165,250,.18);
+}
+
+/* =========================================
+SECTION TITLES
+========================================= */
+
+.glass h2{
+
+    font-size:36px;
+
+    font-weight:700;
+
+    margin-bottom:18px;
+
+    background:
+    linear-gradient(
+    90deg,
+    #2563eb,
+    #7c3aed
+    );
+
+    -webkit-background-clip:text;
+
+    -webkit-text-fill-color:transparent;
+}
+
+/* =========================================
+TEXT
+========================================= */
+
+.glass li{
+
+    font-size:19px;
+
+    line-height:2;
+
+    color:#334155;
+}
+
+/* =========================================
+UPLOAD BOX
+========================================= */
+
+[data-testid="stFileUploader"]{
+
+    background:
+    rgba(255,255,255,.45);
+
+    border:
+    2px dashed #60a5fa;
+
+    border-radius:24px;
+
+    padding:22px;
+
+    box-shadow:
+    0px 0px 15px rgba(96,165,250,.12);
+}
+
+/* =========================================
+METRIC BOX
+========================================= */
+
+.metric-box{
+
+    background:
+    linear-gradient(
+    135deg,
+    rgba(255,255,255,.7),
+    rgba(255,255,255,.45)
+    );
+
+    border-radius:26px;
+
+    padding:28px;
+
+    margin-bottom:22px;
+
+    text-align:center;
+
+    border:
+    1px solid rgba(255,255,255,.4);
+
+    box-shadow:
+    0px 8px 30px rgba(148,163,184,.15);
+
+    transition:.3s;
+}
+
+/* hover */
+
+.metric-box:hover{
+
+    transform:scale(1.03);
+
+    box-shadow:
+    0px 0px 28px rgba(167,139,250,.25);
+}
+
+/* =========================================
+METRIC LABEL
+========================================= */
+
+.metric-box h3{
+
+    color:#6366f1;
+
+    font-size:24px;
+
+    margin-bottom:12px;
+}
+
+/* =========================================
+METRIC VALUE
+========================================= */
+
+.metric-box h1{
+
+    color:#111827;
+
+    font-size:48px;
+
+    font-weight:800;
+}
+
+/* =========================================
+IMAGE
+========================================= */
+
+img{
+
+    border-radius:24px;
+
+    box-shadow:
+    0px 10px 35px rgba(148,163,184,.18);
+}
+
+/* =========================================
+CHART AREA
+========================================= */
+
+canvas{
+
+    border-radius:24px;
+}
+
+/* =========================================
+ALERTS
+========================================= */
+
+.stAlert{
+
+    border-radius:20px;
+
+    font-size:18px;
+
+    border:none;
+
+    box-shadow:
+    0px 6px 18px rgba(148,163,184,.12);
+}
+
+/* =========================================
+BUTTONS
+========================================= */
+
+.stButton>button{
+
+    background:
+    linear-gradient(
+    90deg,
+    #60a5fa,
+    #a78bfa
+    );
+
+    color:white;
+
+    border:none;
+
+    border-radius:18px;
+
+    height:54px;
+
+    font-size:18px;
+
+    font-weight:700;
+
+    transition:.3s;
+}
+
+.stButton>button:hover{
+
+    transform:scale(1.03);
+
+    box-shadow:
+    0px 0px 22px rgba(167,139,250,.35);
+}
+
+/* =========================================
+SCROLLBAR
+========================================= */
+
+::-webkit-scrollbar{
+
+    width:10px;
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:
+    linear-gradient(
+    #60a5fa,
+    #a78bfa
+    );
+
+    border-radius:10px;
+}
+
+/* =========================================
+REMOVE STREAMLIT DEFAULTS
+========================================= */
+
+footer{
+
+    visibility:hidden;
+}
+
+header{
+
+    visibility:hidden;
+}
+
+#MainMenu{
+
+    visibility:hidden;
 }
