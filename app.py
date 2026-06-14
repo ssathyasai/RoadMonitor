@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import os
 
 from tensorflow.keras.models import load_model
 from PIL import Image
@@ -19,18 +20,14 @@ st.set_page_config(
 # LOAD CSS
 # =====================================
 
-with open("style.css") as f:
-
-    st.markdown(
-        f"<style>{f.read()}</style>",
-        unsafe_allow_html=True
-    )
+with open(os.path.join(os.path.dirname(__file__), "style.css")) as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # =====================================
 # LOAD MODEL
 # =====================================
 
-model = load_model("road_damage_model.h5")
+model = load_model(os.path.join(os.path.dirname(__file__), "road_damage_cnn_model.keras"))
 
 # =====================================
 # CLASS LABELS
