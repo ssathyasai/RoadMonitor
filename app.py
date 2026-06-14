@@ -1,261 +1,273 @@
 import streamlit as st
 import numpy as np
-import json
-import pandas as pd
+import cv2
 import matplotlib.pyplot as plt
-import os
 
+from tensorflow.keras.models import load_model
 from PIL import Image
-import tensorflow as tf
 
-
-# =========================================================
-# PAGE CONFIGURATION
-# =========================================================
+# =====================================
+# PAGE CONFIG
+# =====================================
 
 st.set_page_config(
-    page_title="RoadMonitor - AI Road Damage Detection",
+    page_title="Road Damage Detection",
     layout="wide"
 )
 
+# =====================================
+# LOAD CSS
+# =====================================
 
-# =========================================================
-# LOAD CSS  (robust path: works regardless of working dir)
-# =========================================================
+with open("style.css") as f:
 
-def load_css():
-    css_path = os.path.join(os.path.dirname(__file__), "style.css")
-    if os.path.exists(css_path):
-        with open(css_path) as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    st.markdown(
+        f"<style>{f.read()}</style>",
+        unsafe_allow_html=True
+    )
 
-load_css()
-
-
-# =========================================================
-# HEADER
-# =========================================================
-
-st.markdown(
-    "<h1 class='main-title'>RoadMonitor - AI Road Damage Detection</h1>",
-    unsafe_allow_html=True
-)
-st.markdown(
-    "<h3 class='subtitle'>Smart City Infrastructure Monitoring using CNN</h3>",
-    unsafe_allow_html=True
-)
-st.markdown("---")
-
-
-# =========================================================
-# LOAD LABEL MAPPING
-# =========================================================
-
-def load_label_mapping():
-    mapping_path = os.path.join(os.path.dirname(__file__), "label_mapping.json")
-    with open(mapping_path, "r") as f:
-        return json.load(f)
-
-label_mapping = load_label_mapping()
-# Sort labels by their integer index so list order matches model output
-labels = sorted(label_mapping.keys(), key=lambda k: label_mapping[k])
-
-
-# =========================================================
+# =====================================
 # LOAD MODEL
-# =========================================================
+# =====================================
 
-@st.cache_resource
-def load_model():
-    model_path = os.path.join(os.path.dirname(__file__), "road_damage_cnn_model.keras")
-    if not os.path.exists(model_path):
-        st.error("Model file not found. Please train the model first:")
-        st.code("python train_model.py")
-        return None
-    try:
-        model = tf.keras.models.load_model(model_path)
-        return model
-    except Exception as e:
-        st.error(f"Error loading model: {e}")
-        return None
+model = load_model("road_damage_model.h5")
 
-model = load_model()
+# =====================================
+# CLASS LABELS
+# =====================================
 
-
-# =========================================================
-# IMAGE SIZE  (must match training configuration)
-# =========================================================
-
-IMG_SIZE = 224   # MobileNetV2
-
-
-# =========================================================
-# SEVERITY: based on damage TYPE, not just confidence
-# =========================================================
-
-SEVERITY_BY_TYPE = {
-    "potholes": "HIGH",
-    "cracks":   "MEDIUM",
-    "manholes": "LOW",
+class_names = {
+    0: "Pothole",
+    1: "Crack",
+    2: "Manhole"
 }
 
+# =====================================
+# HEADER
+# =====================================
 
-# =========================================================
-# IMAGE UPLOAD
-# =========================================================
+st.markdown("""
+<div class="hero">
 
-st.header("📤 Upload Road Image")
-st.write("""
-Upload a road surface image to detect:
-- **Potholes** — high risk, immediate repair needed
-- **Cracks** — medium risk, preventive maintenance
-- **Manholes** — low risk, routine inspection
-""")
+<h1>🚧 AI-Based Road Damage Detection System</h1>
+
+<p>
+Smart City Infrastructure Monitoring using CNN
+</p>
+
+</div>
+""", unsafe_allow_html=True)
+
+# =====================================
+# ABOUT SECTION
+# =====================================
+
+st.markdown("""
+<div class="glass">
+
+<h2>📌 About the Project</h2>
+
+<ul>
+<li>Road monitoring helps prevent accidents and improve public safety.</li>
+
+<li>Potholes and cracks can damage vehicles and increase traffic risks.</li>
+
+<li>CNN models automatically analyze road surface images using deep learning.</li>
+
+<li>AI-based road inspection is used in smart cities and infrastructure monitoring.</li>
+</ul>
+
+</div>
+""", unsafe_allow_html=True)
+
+# =====================================
+# UPLOAD SECTION
+# =====================================
+
+st.markdown("""
+<div class="glass">
+
+<h2>📤 Upload Road Image</h2>
+
+</div>
+""", unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader(
-    "Choose an image",
-    type=["jpg", "jpeg", "png"],
-    help="Drag and drop supported"
+    "Choose a road image",
+    type=["jpg", "jpeg", "png"]
 )
 
-
-# =========================================================
-# PROCESS IMAGE
-# =========================================================
+# =====================================
+# PREDICTION
+# =====================================
 
 if uploaded_file is not None:
 
-    st.success(f"Image uploaded: **{uploaded_file.name}**")
+    image = Image.open(uploaded_file)
 
-    # ----- Preview -----
-    st.header("Uploaded Image Preview")
-    img = Image.open(uploaded_file).convert("RGB")
-    st.image(img, caption="Uploaded Road Image", width=500)
+    col1, col2 = st.columns([1.3, 1])
 
-    # ----- Preprocessing (MobileNetV2: scale to [-1, 1]) -----
-    img_resized = img.resize((IMG_SIZE, IMG_SIZE))
-    img_array  = np.array(img_resized, dtype=np.float32)
-    img_array  = tf.keras.applications.mobilenet_v2.preprocess_input(img_array)
-    img_array  = np.expand_dims(img_array, axis=0)   # shape: (1, 224, 224, 3)
+    # =================================
+    # LEFT COLUMN
+    # =================================
 
-    # ----- Prediction -----
-    if model is not None:
-        try:
-            predictions  = model.predict(img_array)
-            probabilities = predictions[0]
-        except Exception as e:
-            st.error(f"Prediction error: {e}")
-            st.stop()
-    else:
-        st.warning("Model not loaded — cannot make predictions.")
-        st.stop()
-
-    predicted_index      = int(np.argmax(probabilities))
-    confidence           = float(np.max(probabilities))
-    predicted_label      = labels[predicted_index]
-    confidence_pct       = confidence * 100
-
-    # Severity is determined by damage type (not confidence level)
-    severity = SEVERITY_BY_TYPE.get(predicted_label, "UNKNOWN")
-
-    # ----- Results -----
-    st.header("Prediction Result")
-
-    col1, col2, col3 = st.columns(3)
     with col1:
-        st.success(f"**Detected:** {predicted_label.upper()}")
+
+        st.markdown("""
+        <div class="glass">
+        <h2>🖼 Uploaded Image</h2>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.image(
+            image,
+            use_container_width=True
+        )
+
+    # =================================
+    # PREPROCESSING
+    # =================================
+
+    img = np.array(image)
+
+    if len(img.shape) == 3 and img.shape[-1] == 4:
+
+        img = cv2.cvtColor(
+            img,
+            cv2.COLOR_RGBA2RGB
+        )
+
+    img = cv2.resize(img, (224,224))
+
+    img = img / 255.0
+
+    img = np.expand_dims(img, axis=0)
+
+    # =================================
+    # PREDICTION
+    # =================================
+
+    prediction = model.predict(img)
+
+    predicted_class = np.argmax(prediction)
+
+    confidence = np.max(prediction) * 100
+
+    predicted_label = class_names[predicted_class]
+
+    # =================================
+    # SEVERITY
+    # =================================
+
+    if confidence > 85:
+
+        severity = "HIGH"
+
+    elif confidence > 60:
+
+        severity = "MEDIUM"
+
+    else:
+
+        severity = "LOW"
+
+    # =================================
+    # RIGHT COLUMN
+    # =================================
+
     with col2:
-        st.info(f"**Confidence:** {confidence_pct:.2f}%")
-    with col3:
-        if severity == "HIGH":
-            st.error(f"**Severity:** {severity}")
-        elif severity == "MEDIUM":
-            st.warning(f"**Severity:** {severity}")
-        else:
-            st.info(f"**Severity:** {severity}")
 
-    # ----- Confidence bar -----
-    st.subheader("Prediction Confidence")
-    st.progress(confidence)
+        st.markdown("""
+        <div class="glass">
+        <h2>📊 Prediction Result</h2>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # ----- Bar chart -----
-    st.header("Prediction Visualization")
-    df = pd.DataFrame({"Class": labels, "Probability": probabilities})
+        st.markdown(f"""
+        <div class="metric-box">
+            <h3>Detected Damage</h3>
+            <h1>{predicted_label}</h1>
+        </div>
+        """, unsafe_allow_html=True)
 
-    fig, ax = plt.subplots(figsize=(8, 5))
-    colors = ["#e53935" if lbl == predicted_label else "#90caf9" for lbl in labels]
-    ax.bar(df["Class"], df["Probability"], color=colors)
-    ax.set_title("Class Confidence")
-    ax.set_xlabel("Damage Type")
-    ax.set_ylabel("Confidence Score")
-    ax.set_ylim(0, 1)
-    for i, prob in enumerate(probabilities):
-        ax.text(i, prob + 0.01, f"{prob:.2%}", ha='center', fontsize=10)
+        st.markdown(f"""
+        <div class="metric-box">
+            <h3>Confidence</h3>
+            <h1>{confidence:.2f}%</h1>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div class="metric-box">
+            <h3>Severity</h3>
+            <h1>{severity}</h1>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # =================================
+    # CHART
+    # =================================
+
+    st.markdown("""
+    <div class="glass">
+    <h2>📈 Confidence Visualization</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+    probs = prediction[0] * 100
+
+    fig, ax = plt.subplots(figsize=(7,3))
+
+    bars = ax.bar(
+        list(class_names.values()),
+        probs
+    )
+
+    fig.patch.set_facecolor("#0f172a")
+
+    ax.set_facecolor("#0f172a")
+
+    ax.tick_params(colors="white")
+
+    ax.spines['bottom'].set_color('white')
+    ax.spines['left'].set_color('white')
+
+    ax.set_ylabel(
+        "Confidence %",
+        color="white"
+    )
+
+    ax.set_title(
+        "Prediction Probability",
+        color="white"
+    )
+
     st.pyplot(fig)
 
-    # ----- Probability table -----
-    st.subheader("Class Probabilities")
-    for lbl, prob in zip(labels, probabilities):
-        st.write(f"**{lbl}** : {prob:.4f}")
+    # =================================
+    # RECOMMENDATION
+    # =================================
 
-    # ----- Maintenance Recommendations -----
-    st.header("Maintenance Recommendations")
+    st.markdown("""
+    <div class="glass">
+    <h2>⚠ Recommendation</h2>
+    </div>
+    """, unsafe_allow_html=True)
 
-    if predicted_label == "potholes":
-        st.error("""
-**🔴 Immediate maintenance required.**
+    if predicted_label == "Pothole":
 
-Potholes present a high-risk condition:
-- Vehicle tyre damage / punctures
-- Loss of vehicle control
-- Risk of traffic accidents
+        st.error(
+            "Immediate maintenance recommended. High-risk road condition detected."
+        )
 
-**Priority Level: HIGH — Schedule urgent repair.**
-""")
+    elif predicted_label == "Crack":
 
-    elif predicted_label == "cracks":
-        st.warning("""
-**🟡 Preventive maintenance recommended.**
+        st.warning(
+            "Preventive repair is advised to avoid future road deterioration."
+        )
 
-Surface cracks can worsen over time due to weather and traffic load.
-Early intervention prevents more costly repairs later.
+    else:
 
-**Priority Level: MEDIUM — Schedule within 30 days.**
-""")
-
-    elif predicted_label == "manholes":
-        st.info("""
-**🔵 Routine inspection recommended.**
-
-Manhole cover detected. Verify:
-- Cover is flush with road surface
-- No settlement or cracking around frame
-
-**Priority Level: LOW — Include in next scheduled inspection.**
-""")
-
-    # ----- Summary -----
-    st.markdown("---")
-    st.subheader("CNN Analysis Summary")
-    st.write(f"""
-The CNN model analysed the uploaded image through 4 convolutional blocks,
-extracting features at increasing levels of abstraction (edges → textures → patterns → shapes).
-
-- **Predicted class:** {predicted_label.upper()}
-- **Confidence:** {confidence_pct:.2f}%
-- **Severity:** {severity}
-
-A higher confidence score indicates that the detected visual features strongly
-match the training examples for that damage category.
-""")
-
-
-# =========================================================
-# FOOTER
-# =========================================================
-
-st.markdown("---")
-st.markdown(
-    "<center><h4>RoadMonitor — AI-Powered Smart City Infrastructure Monitoring</h4></center>",
-    unsafe_allow_html=True
-)
+        st.info(
+            "Ensure proper alignment and secure manhole covering."
+        )
